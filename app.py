@@ -1,4 +1,15 @@
-from flask import Flask, render_template, request, redirect, url_for
+try:
+    from flask import Flask, render_template, request, redirect, url_for
+except Exception as e:
+    import sys
+    sys.stderr.write(
+        "Missing dependency: Flask is not installed in the current Python environment.\n"
+        "Install it with: pip install Flask\n"
+        "Or via requirements file: pip install -r requirements.txt\n"
+        f"Original error: {e}\n"
+    )
+    sys.exit(1)
+
 import sqlite3
 import json
 from datetime import datetime
