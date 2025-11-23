@@ -1,0 +1,132 @@
+/* Basic Reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f9f5f0;
+    color: #333;
+    line-height: 1.6;
+}
+
+.container {
+    width: 90%;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Header */
+header {
+    background-color: #7f4a1e;
+    color: #fff;
+    padding: 20px 0;
+    margin-bottom: 20px;
+}
+
+header h1 {
+    margin-bottom: 10px;
+}
+
+nav a {
+    color: #fff;
+    text-decoration: none;
+    margin-right: 15px;
+    font-weight: bold;
+}
+
+nav a:hover {
+    text-decoration: underline;
+}
+
+/* Footer */
+footer {
+    background-color: #7f4a1e;
+    color: #fff;
+    text-align: center;
+    padding: 15px 0;
+    margin-top: 40px;
+    font-size: 0.9em;
+}
+
+/* Menu Items */
+.menu-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill,minmax(250px,1fr));
+    gap: 20px;
+}
+
+.menu-item {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(127, 74, 30, 0.3);
+}
+
+.menu-item h3 {
+    margin-bottom: 8px;
+    color: #7f4a1e;
+}
+
+.price {
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+/* Order Form */
+form {
+    margin-top: 20px;
+}
+
+.menu-item label {
+    cursor: pointer;
+}
+
+input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+.order-button {
+    background-color: #7f4a1e;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+    font-size: 1em;
+}
+
+.order-button:hover {
+    background-color: #a5632a;
+}
+
+/* Success message */
+.success-message {
+    color: green;
+    margin-bottom: 15px;
+    font-weight: bold;
+}
+
+/* Orders in admin */
+.orders-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.order-card {
+    background-color: #fff;
+    padding: 15px;
+    border-radius: 4px;
+    box-shadow: 0 2px 5px rgba(127, 74, 30, 0.3);
+}
+
+.order-card h3 {
+    color: #7f4a1e;
+    margin-bottom: 10px;
+}

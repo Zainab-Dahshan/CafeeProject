@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Place Your Order</h2>
+{% if success %}
+    <p class="success-message">Thank you! Your order has been submitted.</p>
+{% endif %}
+<form method="POST" action="{{ url_for('order') }}">
+    <div class="menu-items">
+        {% for item in menu_items %}
+        <div class="menu-item">
+            <label>
+                <input type="checkbox" name="items" value="{{ item['id'] }}" />
+                <strong>{{ item['name'] }}</strong> — ${{ "%.2f"|format(item['price']) }}
+                <p>{{ item['description'] }}</p>
+            </label>
+        </div>
+        {% endfor %}
+    </div>
+    <button type="submit" class="order-button">Submit Order</button>
+</form>
+{% endblock %}

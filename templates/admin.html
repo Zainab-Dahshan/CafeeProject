@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Admin Panel - Orders</h2>
+{% if orders %}
+    <div class="orders-list">
+        {% for order in orders %}
+        <div class="order-card">
+            <h3>Order #{{ order['id'] }}</h3>
+            <p><strong>Time:</strong> {{ order['timestamp'] }}</p>
+            <ul>
+                {% for item in order['items'] %}
+                <li>{{ item['name'] }} - ${{ "%.2f"|format(item['price']) }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <p>No orders found.</p>
+{% endif %}
+{% endblock %}
