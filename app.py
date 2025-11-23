@@ -1,5 +1,11 @@
 try:
-    from flask import Flask, render_template, request, redirect, url_for
+    import importlib
+    flask = importlib.import_module('flask')
+    Flask = flask.Flask
+    render_template = flask.render_template
+    request = flask.request
+    redirect = flask.redirect
+    url_for = flask.url_for
 except Exception as e:
     import sys
     sys.stderr.write(
