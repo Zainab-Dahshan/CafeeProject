@@ -1,0 +1,50 @@
+[Unit]
+Description=Gunicorn instance to serve Café Application
+After=network.target
+
+[Service]
+# Systemd will start this service only after the network is up
+# Set the working directory to your project directory
+WorkingDirectory=/path/to/your/cafe/app
+
+# Set environment variables
+Environment="FLASK_APP=wsgi.py"
+Environment="FLASK_ENV=production"
+
+# Path to the virtual environment
+Environment="PATH=/path/to/your/venv/bin"
+
+# User and group to run the service as
+User=www-data
+Group=www-data
+
+# Start the service
+# The --chdir flag changes the working directory before the application is loaded
+# The --pythonpath flag adds directories to the Python path
+ExecStart=/path/to/your/venv/bin/gunicorn \
+    --workers 4 \
+    --bind unix:cafe_app.sock \
+    --timeout 120 \
+    --access-logfile - \
+    --error-logfile - \
+    --chdir /path/to/your/cafe/app \
+    --pythonpath /path/to/your/cafe \
+    wsgi:app
+
+# Restart the service if it crashes
+Restart=always
+RestartSec=5
+
+# Set security options
+PrivateTmp=true
+ProtectSystem=full
+NoNewPrivileges=true
+PrivateDevices=true
+ProtectHome=read-only
+
+# Set process priority and limits
+Nice=0
+LimitNOFILE=65535
+
+[Install]
+WantedBy=multi-user.target
