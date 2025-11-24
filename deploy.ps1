@@ -3,49 +3,74 @@
     Deployment script for the Café Application
 .DESCRIPTION
     This script automates the deployment process for the Café Application.
-    It handles virtual environment setup, dependency installation, and database migrations.
-.PARAMETER environment
-    The deployment environment (development or production). Default is 'development'.
-.PARAMETER migrate
+    It handles virtual environment setup, dependency installation, database migrations,
+    and production server setup.
+
+.PARAMETER Environment
+    The deployment environment (development, staging, production). Default is 'development'.
+
+.PARAMETER Migrate
     If specified, runs database migrations.
+
+.PARAMETER InstallDeps
+    If specified, installs/updates Python dependencies.
+
+.PARAMETER CreateAdmin
+    If specified, creates an admin user.
+
 .EXAMPLE
-    .\deploy.ps1 -environment production -migrate
+    # Development deployment with migrations
+    .\deploy.ps1 -Environment development -Migrate -InstallDeps
+
+    # Production deployment
+    .\deploy.ps1 -Environment production -Migrate -InstallDeps
 #>
 
 param(
-    [string]$environment = "development",
-    [switch]$migrate = $false
+    [ValidateSet('development', 'staging', 'production')]
+    [string]$Environment = "development",
+    
+    [switch]$Migrate = $false,
+    [switch]$InstallDeps = $false,
+    [switch]$CreateAdmin = $false
 )
 
 # Set error action preference
 $ErrorActionPreference = "Stop"
 
+# Import required modules
+Import-Module "$PSScriptRoot\deploy\deploy-utils.ps1" -ErrorAction SilentlyContinue
+
+# Set environment variables
+$env:FLASK_ENV = $Environment
+if ($Environment -eq "production") {
+    $env:FLASK_CONFIG = "production"
+}
+
 # Print header
 Write-Host "=== Café Application Deployment ===" -ForegroundColor Cyan
-Write-Host "Environment: $environment" -ForegroundColor Yellow
-if ($migrate) {
-    Write-Host "Will run database migrations" -ForegroundColor Yellow
-}
+Write-Host "Environment: $Environment" -ForegroundColor Yellow
+Write-Host "Current directory: $PSScriptRoot" -ForegroundColor Gray
 
-# Function to check if a command exists
-function Test-CommandExists {
-    param($command)
-    $exists = $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
-    return $exists
-}
-
-# Check for Python
-if (-not (Test-CommandExists python)) {
-    Write-Error "Python is not installed or not in PATH. Please install Python 3.8 or higher."
-    exit 1
+# Check for required commands
+$requiredCommands = @('python', 'pip')
+foreach ($cmd in $requiredCommands) {
+    if (-not (Test-CommandExists $cmd)) {
+        Write-Error "$cmd is not installed or not in PATH. Please install it and try again."
+        exit 1
+    }
 }
 
 # Check Python version
-$pythonVersion = python --version
-if ($pythonVersion -notmatch "Python 3\.([8-9]|1[0-9])") {
+$pythonVersion = (python --version) -replace '^Python (\d+\.\d+).*$', '$1'
+if ([version]$pythonVersion -lt [version]"3.8") {
     Write-Error "Python 3.8 or higher is required. Found: $pythonVersion"
     exit 1
 }
+
+# Set up virtual environment
+$venvPath = "$PSScriptRoot\.venv"
+$activateScript = "$venvPath\Scripts\Activate.ps1"
 
 # Create virtual environment if it doesn't exist
 $venvPath = ".\venv"
