@@ -7,9 +7,11 @@ from app import create_app, db
 from app.models.user import User
 from app.models.menu_item import MenuItem
 from app.models.order import Order, OrderItem
+from flask_migrate import Migrate
 
 # Create the application instance
 app = create_app(os.getenv('FLASK_CONFIG') or 'default')
+migrate = Migrate(app, db)  # Initialize Flask-Migrate with app and db
 
 @app.shell_context_processor
 def make_shell_context():

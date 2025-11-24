@@ -95,4 +95,4 @@ def deploy():
         print('Added sample menu items')
 
 if __name__ == '__main__':
-    app.run()
+    app.cli()

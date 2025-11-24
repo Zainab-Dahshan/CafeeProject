@@ -3,6 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 
+# Create SQLAlchemy instance
 db = SQLAlchemy()
 
 class BaseModel(db.Model):
@@ -33,7 +34,4 @@ class BaseModel(db.Model):
         db.session.commit()
         return self
 
-# Import all models to ensure they are registered with SQLAlchemy
-from .user import User
-from .menu_item import MenuItem
-from .order import Order, OrderItem
+# Models will be imported in app/__init__.py to avoid circular imports

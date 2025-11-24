@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
-from flask_bootstrap import Bootstrap5
+from flask_bootstrap3 import Bootstrap
 from flask_migrate import Migrate
 from flask_caching import Cache
 from flask_moment import Moment
@@ -10,10 +10,14 @@ from config import config
 # Initialize extensions
 db = SQLAlchemy()
 login_manager = LoginManager()
-bootstrap = Bootstrap5()
-migrate = Migrate()
+bootstrap = Bootstrap()
+migrate = Migrate()  # Initialize Flask-Migrate
 cache = Cache()
 moment = Moment()
+
+# Import models after extensions to avoid circular imports
+# This import needs to be after db initialization but before create_app
+# The actual model classes will be imported when needed
 
 def create_app(config_name='default'):
     """Application factory function."""
@@ -26,31 +30,24 @@ def create_app(config_name='default'):
     db.init_app(app)
     login_manager.init_app(app)
     bootstrap.init_app(app)
-    migrate.init_app(app, db)
+    migrate.init_app(app, db)  # Initialize with both app and db
     cache.init_app(app)
     moment.init_app(app)
     
-    # Configure login manager
-    login_manager.login_view = 'auth.login'
-    login_manager.login_message_category = 'info'
-    
-    # Register blueprints
+    # Import and register blueprints
     from .main import main as main_blueprint
     app.register_blueprint(main_blueprint)
     
-    from .auth import auth as auth_blueprint
-    app.register_blueprint(auth_blueprint, url_prefix='/auth')
-    
-    from .admin import admin as admin_blueprint
-    app.register_blueprint(admin_blueprint, url_prefix='/admin')
-    
-    # Error handlers
-    from .utils.error_handlers import register_error_handlers
-    register_error_handlers(app)
-    
-    # Shell context
-    @app.shell_context_processor
-    def make_shell_context():
-        return {'db': db}
+    # Import models after app is created to avoid circular imports
+    with app.app_context():
+        # Initialize models and get model classes
+        from .models import init_app as init_models
+        models = init_models(app)
+        
+        # Make models available in the app context
+        app.models = models
+        
+        # Create database tables if they don't exist
+        db.create_all()
     
     return app
