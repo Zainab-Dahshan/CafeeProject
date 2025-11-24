@@ -21,13 +21,13 @@ A modern, responsive café management system built with Flask, designed to strea
 
 - [Running the Application](#running-the-application)
 
-- [API Documentation](#api-documentation)
+- [API Documentation] (#api-documentation)
 
 - [Project Maintenance](#project-maintenance)
 
-- [Testing](#testing)
+- [Testing] (#testing)
 
-- [Deployment](#deployment)
+- [Deployment] (#deployment)
 
 - [License](#license)
 
@@ -96,6 +96,7 @@ A modern, responsive café management system built with Flask, designed to strea
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Python 3.9 or higher
 - pip (Python package installer)
 - Git (for version control)
@@ -103,18 +104,21 @@ A modern, responsive café management system built with Flask, designed to strea
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/Zainab-Dahshan/CafeeProject.git
    cd CafeeProject
    ```
 
 2. **Create and activate a virtual environment**
+
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: .\venv\Scripts\activate
    ```
 
 3. **Install dependencies**
+
    ```bash
    pip install -r requirements.txt
    ```
@@ -129,7 +133,7 @@ A modern, responsive café management system built with Flask, designed to strea
    flask db upgrade
    ```
 
-### Running the Application
+### Starting the Development Server
 
 1. **Start the development server**
 
