@@ -21,7 +21,7 @@ A comprehensive café management system built with Flask, featuring menu managem
 
 - [API Documentation](#api-documentation)
 
-- [Project Structure](#project-maintenance)
+- [Project Maintenance](#project-maintenance)
 
 - [Testing](#testing)
 

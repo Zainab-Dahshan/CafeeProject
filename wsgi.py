@@ -1,8 +1,10 @@
-""
+# -*- coding: utf-8 -*-
+"""
 WSGI config for the Café Application.
 
 This module contains the WSGI callable as a module-level variable named ``application``.
 """
+
 import os
 from app import create_app
 

@@ -1,8 +1,9 @@
-""
+"""
 Gunicorn configuration file for the Café Application.
 
 This file contains production-ready configuration for Gunicorn.
 """
+
 import multiprocessing
 import os
 
@@ -21,7 +22,7 @@ keepalive = 2  # Seconds to keep connections alive
 loglevel = 'info'  # Log level
 accesslog = '-'  # Log to stdout
 errorlog = '-'   # Log errors to stderr
-access_log_format = '%(h)s %(l)s %(u)s %(t)s "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"  # Log format
+access_log_format = '%(h)s %(l)s %(u)s; %(t)s; "%(r)s" %(s)s %(b)s "%(f)s" "%(a)s"  # Log format
 
 # Process naming
 proc_name = 'cafe_app'  # Process name
