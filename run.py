@@ -13,9 +13,9 @@ app = create_app(os.getenv('FLASK_CONFIG') or 'default')
 
 @app.shell_context_processor
 def make_shell_context():
-    ""
+    """
     Make shell context available in the Flask shell.
-    ""
+    """
     return {
         'db': db,
         'User': User,
