@@ -48,10 +48,46 @@ class TestingConfig(Config):
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
 
 class ProductionConfig(Config):
+    """Production configuration."""
     DEBUG = False
+    
+    # Security
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
+    
+    # Rate limiting
+    RATELIMIT_DEFAULT = '200 per day;50 per hour'
+    
+    # Logging
+    LOG_LEVEL = 'WARNING'
+    LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    
+    # Caching
+    CACHE_TYPE = 'RedisCache'  # Requires Redis server
+    CACHE_REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
+    
+    # Email settings (configure these in production)
+    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@cafewebsite.com')
+    
+    # File uploads
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'app', 'static', 'uploads')
+    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max upload size
+    
+    # API settings
+    API_PREFIX = '/api/v1'
+    
+    # Admin settings
+    ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@cafewebsite.com')
+    
+    # Application settings
+    APP_NAME = 'Café Website'
+    APP_VERSION = '1.0.0'
 
 # Configuration dictionary
 config = {
