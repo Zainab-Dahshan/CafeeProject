@@ -1,21 +1,626 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2>Place Your Order</h2>
-{% if success %}
-    <p class="success-message">Thank you! Your order has been submitted.</p>
-{% endif %}
-<form method="POST" action="{{ url_for('order') }}">
-    <div class="menu-items">
-        {% for item in menu_items %}
-        <div class="menu-item">
-            <label>
-                <input type="checkbox" name="items" value="{{ item['id'] }}" />
-                <strong>{{ item['name'] }}</strong> — ${{ "%.2f"|format(item['price']) }}
-                <p>{{ item['description'] }}</p>
-            </label>
-        </div>
-        {% endfor %}
+<div class="order-container">
+    <div class="order-header">
+        <h1>Place Your Order</h1>
+        <p>Select items from our menu and customize your order</p>
+        
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <i class="fas {% if category == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %}"></i>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
     </div>
-    <button type="submit" class="order-button">Submit Order</button>
-</form>
+
+    <div class="order-layout">
+        <form method="POST" action="{{ url_for('order') }}" class="order-form">
+            <div class="order-items">
+                <h2><i class="fas fa-utensils"></i> Menu Items</h2>
+                <div class="menu-categories">
+                    <button type="button" class="category-btn active" data-category="all">All Items</button>
+                    <button type="button" class="category-btn" data-category="coffee">Coffee</button>
+                    <button type="button" class="category-btn" data-category="tea">Tea</button>
+                    <button type="button" class="category-btn" data-category="pastry">Pastries</button>
+                </div>
+                
+                <div class="menu-items-grid">
+                    {% for item in menu_items %}
+                    <div class="menu-item-card" data-category="{{ item.category|lower if item.category else 'other' }}">
+                        <label class="menu-item-label">
+                            <input type="checkbox" name="items" value="{{ item['id'] }}" class="item-checkbox" />
+                            <div class="menu-item-content">
+                                <div class="menu-item-header">
+                                    <h3>{{ item['name'] }}</h3>
+                                    <span class="price">${{ "%.2f"|format(item['price']) }}</span>
+                                </div>
+                                <p class="item-description">{{ item['description'] }}</p>
+                                <div class="item-options">
+                                    <div class="quantity-selector">
+                                        <button type="button" class="quantity-btn minus" data-item="{{ item['id'] }}">-</button>
+                                        <input type="number" name="item_{{ item['id'] }}_qty" value="1" min="1" max="10" class="quantity-input" data-item="{{ item['id'] }}" />
+                                        <button type="button" class="quantity-btn plus" data-item="{{ item['id'] }}">+</button>
+                                    </div>
+                                    <div class="special-requests">
+                                        <input type="text" name="item_{{ item['id'] }}_notes" placeholder="Special instructions" class="special-notes" />
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="order-summary">
+                <div class="summary-card">
+                    <h2><i class="fas fa-receipt"></i> Order Summary</h2>
+                    <div class="selected-items" id="selectedItems">
+                        <p class="empty-cart">Select items from the menu</p>
+                    </div>
+                    <div class="order-totals">
+                        <div class="total-row">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">$0.00</span>
+                        </div>
+                        <div class="total-row">
+                            <span>Tax (10%):</span>
+                            <span id="tax">$0.00</span>
+                        </div>
+                        <div class="total-row grand-total">
+                            <span>Total:</span>
+                            <span id="total">$0.00</span>
+                        </div>
+                    </div>
+                    <div class="customer-info">
+                        <h3><i class="fas fa-user"></i> Your Information</h3>
+                        <div class="form-group">
+                            <label for="name">Full Name</label>
+                            <input type="text" id="name" name="customer_name" class="form-control" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" id="email" name="customer_email" class="form-control" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone Number</label>
+                            <input type="tel" id="phone" name="customer_phone" class="form-control" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="delivery">Delivery or Pickup?</label>
+                            <select id="delivery" name="delivery_type" class="form-control" required>
+                                <option value="">Select an option</option>
+                                <option value="pickup">Pickup</option>
+                                <option value="delivery">Delivery (+$3.00)</option>
+                            </select>
+                        </div>
+                        <div id="deliveryAddressGroup" class="form-group" style="display: none;">
+                            <label for="address">Delivery Address</label>
+                            <textarea id="address" name="delivery_address" class="form-control" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block btn-lg" id="submitOrder">
+                        <i class="fas fa-paper-plane"></i> Place Order
+                    </button>
+                    <p class="order-note">
+                        <i class="fas fa-lock"></i> Your payment will be processed securely at pickup/delivery.
+                    </p>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .order-container {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+    }
+
+    .order-header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+    }
+
+    .order-header h1 {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .order-header p {
+        color: #666;
+        font-size: 1.1rem;
+    }
+
+    .order-layout {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr;
+        gap: 2rem;
+    }
+
+    /* Menu Categories */
+    .menu-categories {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin: 1.5rem 0;
+    }
+
+    .category-btn {
+        padding: 0.5rem 1.25rem;
+        border: 2px solid var(--primary-color);
+        background: none;
+        color: var(--primary-color);
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+    }
+
+    .category-btn:hover,
+    .category-btn.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    /* Menu Items Grid */
+    .menu-items-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+
+    .menu-item-card {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .menu-item-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .menu-item-label {
+        display: block;
+        cursor: pointer;
+        padding: 1.25rem;
+        transition: background-color 0.2s ease;
+    }
+
+    .menu-item-label:hover {
+        background-color: #f9f9f9;
+    }
+
+    .item-checkbox {
+        display: none;
+    }
+
+    .item-checkbox:checked + .menu-item-content {
+        border-left: 4px solid var(--accent-color);
+        padding-left: 0.75rem;
+        margin-left: -0.75rem;
+    }
+
+    .menu-item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .menu-item-header h3 {
+        margin: 0;
+        font-size: 1.1rem;
+        color: var(--primary-color);
+    }
+
+    .price {
+        font-weight: 600;
+        color: var(--accent-color);
+        font-size: 1.05rem;
+    }
+
+    .item-description {
+        color: #666;
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+        line-height: 1.5;
+    }
+
+    .item-options {
+        margin-top: 1rem;
+        padding-top: 0.75rem;
+        border-top: 1px dashed #eee;
+    }
+
+    .quantity-selector {
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .quantity-btn {
+        width: 28px;
+        height: 28px;
+        background: #f0f0f0;
+        border: none;
+        border-radius: 4px;
+        font-size: 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background-color 0.2s ease;
+    }
+
+    .quantity-btn:hover {
+        background: #e0e0e0;
+    }
+
+    .quantity-input {
+        width: 45px;
+        text-align: center;
+        margin: 0 0.5rem;
+        padding: 0.25rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
+
+    .special-requests {
+        margin-top: 0.5rem;
+    }
+
+    .special-notes {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 0.85rem;
+    }
+
+    /* Order Summary */
+    .order-summary {
+        position: sticky;
+        top: 1rem;
+    }
+
+    .summary-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 15px rgba(0, 0, 0, 0.08);
+    }
+
+    .summary-card h2 {
+        font-size: 1.5rem;
+        margin-bottom: 1.5rem;
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .selected-items {
+        max-height: 300px;
+        overflow-y: auto;
+        margin-bottom: 1.5rem;
+        border: 1px solid #eee;
+        border-radius: 6px;
+        padding: 0.75rem;
+    }
+
+    .empty-cart {
+        color: #999;
+        text-align: center;
+        padding: 1rem 0;
+        font-style: italic;
+    }
+
+    .selected-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.75rem 0;
+        border-bottom: 1px solid #f5f5f5;
+    }
+
+    .selected-item:last-child {
+        border-bottom: none;
+    }
+
+    .item-details {
+        flex-grow: 1;
+    }
+
+    .item-name {
+        font-weight: 500;
+        margin-bottom: 0.25rem;
+    }
+
+    .item-notes {
+        font-size: 0.8rem;
+        color: #666;
+        font-style: italic;
+    }
+
+    .item-price {
+        font-weight: 600;
+        color: var(--accent-color);
+        white-space: nowrap;
+        margin-left: 1rem;
+    }
+
+    .order-totals {
+        margin: 1.5rem 0;
+        padding: 1.25rem;
+        background-color: #f9f9f9;
+        border-radius: 6px;
+    }
+
+    .total-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+        font-size: 1rem;
+    }
+
+    .grand-total {
+        margin-top: 1rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid #eee;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .customer-info {
+        margin: 2rem 0;
+    }
+
+    .customer-info h3 {
+        font-size: 1.2rem;
+        margin-bottom: 1.25rem;
+        color: var(--primary-color);
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.25rem;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: #555;
+    }
+
+    .form-control {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 1rem;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .form-control:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(111, 78, 55, 0.1);
+    }
+
+    .btn-block {
+        display: block;
+        width: 100%;
+    }
+
+    .btn-lg {
+        padding: 1rem;
+        font-size: 1.1rem;
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+    }
+
+    .btn-primary:hover {
+        background-color: #c4954e;
+    }
+
+    .order-note {
+        margin-top: 1rem;
+        font-size: 0.85rem;
+        color: #666;
+        text-align: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 992px) {
+        .order-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .order-summary {
+            position: static;
+            margin-top: 2rem;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .menu-items-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .order-header h1 {
+            font-size: 2rem;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Category filtering
+    const categoryButtons = document.querySelectorAll('.category-btn');
+    const menuItems = document.querySelectorAll('.menu-item-card');
+    const selectedItems = [];
+    let subtotal = 0;
+    const taxRate = 0.10; // 10% tax
+
+    // Category filtering
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const category = this.getAttribute('data-category');
+            
+            // Update active button
+            categoryButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Filter items
+            menuItems.forEach(item => {
+                if (category === 'all' || item.getAttribute('data-category') === category) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Toggle delivery address field
+    const deliverySelect = document.getElementById('delivery');
+    const deliveryAddressGroup = document.getElementById('deliveryAddressGroup');
+    
+    if (deliverySelect) {
+        deliverySelect.addEventListener('change', function() {
+            if (this.value === 'delivery') {
+                deliveryAddressGroup.style.display = 'block';
+            } else {
+                deliveryAddressGroup.style.display = 'none';
+            }
+            updateOrderSummary();
+        });
+    }
+
+    // Quantity controls
+    document.querySelectorAll('.quantity-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-item');
+            const input = document.querySelector(`.quantity-input[data-item="${itemId}"]`);
+            let value = parseInt(input.value);
+            
+            if (this.classList.contains('plus')) {
+                if (value < 10) value++;
+            } else {
+                if (value > 1) value--;
+            }
+            
+            input.value = value;
+            updateOrderSummary();
+        });
+    });
+
+    // Update order summary when items are selected
+    document.querySelectorAll('.item-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', updateOrderSummary);
+    });
+
+    // Update order summary when quantities change
+    document.querySelectorAll('.quantity-input').forEach(input => {
+        input.addEventListener('change', updateOrderSummary);
+    });
+
+    // Update order summary function
+    function updateOrderSummary() {
+        const selectedItemsContainer = document.getElementById('selectedItems');
+        selectedItemsContainer.innerHTML = '';
+        
+        let subtotal = 0;
+        let hasItems = false;
+        
+        document.querySelectorAll('.menu-item-card').forEach(card => {
+            const checkbox = card.querySelector('.item-checkbox');
+            if (checkbox.checked) {
+                hasItems = true;
+                const itemId = checkbox.value;
+                const itemName = card.querySelector('h3').textContent;
+                const priceText = card.querySelector('.price').textContent;
+                const price = parseFloat(priceText.replace('$', ''));
+                const quantity = parseInt(card.querySelector('.quantity-input').value);
+                const notes = card.querySelector('.special-notes').value;
+                const itemTotal = price * quantity;
+                
+                subtotal += itemTotal;
+                
+                const itemElement = document.createElement('div');
+                itemElement.className = 'selected-item';
+                itemElement.innerHTML = `
+                    <div class="item-details">
+                        <div class="item-name">${quantity}x ${itemName}</div>
+                        ${notes ? `<div class="item-notes">${notes}</div>` : ''}
+                    </div>
+                    <div class="item-price">$${itemTotal.toFixed(2)}</div>
+                `;
+                
+                selectedItemsContainer.appendChild(itemElement);
+            }
+        });
+        
+        if (!hasItems) {
+            selectedItemsContainer.innerHTML = '<p class="empty-cart">Select items from the menu</p>';
+        }
+        
+        // Calculate totals
+        const tax = subtotal * taxRate;
+        const deliveryFee = deliverySelect && deliverySelect.value === 'delivery' ? 3 : 0;
+        const total = subtotal + tax + deliveryFee;
+        
+        // Update the UI
+        document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+        document.getElementById('tax').textContent = `$${tax.toFixed(2)}`;
+        
+        // Add delivery fee if applicable
+        const taxRow = document.querySelector('.total-row:not(.grand-total)');
+        if (deliveryFee > 0) {
+            if (!document.getElementById('delivery-fee-row')) {
+                const deliveryRow = document.createElement('div');
+                deliveryRow.className = 'total-row';
+                deliveryRow.id = 'delivery-fee-row';
+                deliveryRow.innerHTML = `
+                    <span>Delivery:</span>
+                    <span>$${deliveryFee.toFixed(2)}</span>
+                `;
+                taxRow.after(deliveryRow);
+            } else {
+                document.querySelector('#delivery-fee-row span:last-child').textContent = `$${deliveryFee.toFixed(2)}`;
+            }
+        } else {
+            const deliveryRow = document.getElementById('delivery-fee-row');
+            if (deliveryRow) deliveryRow.remove();
+        }
+        
+        document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+    }
+    
+    // Initialize the order summary
+    updateOrderSummary();
+});
+</script>
 {% endblock %}

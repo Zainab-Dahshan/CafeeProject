@@ -1,13 +1,284 @@
 {% extends "base.html" %}
+
 {% block content %}
-<h2>Menu</h2>
-<div class="menu-items">
-    {% for item in menu_items %}
-    <div class="menu-item">
-        <h3>{{ item['name'] }}</h3>
-        <p>{{ item['description'] }}</p>
-        <p class="price">${{ "%.2f"|format(item['price']) }}</p>
+<div class="hero">
+    <div class="hero-content">
+        <h1>Welcome to Maryam's Café</h1>
+        <p>Discover our delicious selection of coffee and pastries</p>
+        <a href="{{ url_for('order') }}" class="btn btn-primary">Order Now</a>
     </div>
-    {% endfor %}
 </div>
+
+<section class="menu-section">
+    <div class="section-header">
+        <h2>Our Menu</h2>
+        <p>Handcrafted with love and the finest ingredients</p>
+    </div>
+    
+    <div class="menu-categories">
+        <button class="category-btn active" data-category="all">All Items</button>
+        <button class="category-btn" data-category="coffee">Coffee</button>
+        <button class="category-btn" data-category="tea">Tea</button>
+        <button class="category-btn" data-category="pastry">Pastries</button>
+    </div>
+
+    <div class="menu-grid">
+        {% for item in menu_items %}
+        <div class="menu-card" data-category="{{ item.category|lower if item.category else 'other' }}">
+            <div class="menu-card-img">
+                <i class="fas fa-{{ item.icon if item.icon else 'utensils' }}"></i>
+            </div>
+            <div class="menu-card-content">
+                <div class="menu-card-header">
+                    <h3>{{ item['name'] }}</h3>
+                    <span class="price">${{ "%.2f"|format(item['price']) }}</span>
+                </div>
+                <p class="description">{{ item['description'] }}</p>
+                <div class="menu-card-footer">
+                    <span class="category-tag">{{ item.category if item.category else 'Special' }}</span>
+                    <button class="btn btn-sm add-to-order" data-item-id="{{ item['id'] }}">
+                        <i class="fas fa-plus"></i> Add to Order
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<style>
+    /* Hero Section */
+    .hero {
+        background: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), 
+                    url('https://images.unsplash.com/photo-1447933601403-0c6688de566e?ixlib=rb-1.2.1&auto=format&fit=crop&w=1950&q=80');
+        background-size: cover;
+        background-position: center;
+        color: white;
+        text-align: center;
+        padding: 6rem 1rem;
+        margin: -2rem -20px 0;
+        position: relative;
+    }
+
+    .hero-content {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .hero h1 {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    .hero p {
+        font-size: 1.25rem;
+        margin-bottom: 2rem;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Menu Section */
+    .menu-section {
+        padding: 4rem 0;
+    }
+
+    .section-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+
+    .section-header h2 {
+        font-size: 2.5rem;
+        color: var(--primary-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .section-header p {
+        color: #666;
+        font-size: 1.1rem;
+    }
+
+    /* Menu Categories */
+    .menu-categories {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-bottom: 2rem;
+    }
+
+    .category-btn {
+        padding: 0.5rem 1.5rem;
+        border: 2px solid var(--primary-color);
+        background: none;
+        color: var(--primary-color);
+        border-radius: 50px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .category-btn:hover,
+    .category-btn.active {
+        background-color: var(--primary-color);
+        color: white;
+    }
+
+    /* Menu Grid */
+    .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 2rem;
+    }
+
+    .menu-card {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .menu-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .menu-card-img {
+        height: 180px;
+        background-color: #f8f5f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 4rem;
+        color: var(--accent-color);
+    }
+
+    .menu-card-content {
+        padding: 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .menu-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+    }
+
+    .menu-card h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        color: var(--primary-color);
+    }
+
+    .price {
+        font-weight: 700;
+        color: var(--accent-color);
+        font-size: 1.2rem;
+    }
+
+    .description {
+        color: #666;
+        margin-bottom: 1.25rem;
+        flex-grow: 1;
+    }
+
+    .menu-card-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+    }
+
+    .category-tag {
+        background-color: #f0e6d9;
+        color: var(--primary-color);
+        padding: 0.25rem 0.75rem;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .btn-sm {
+        padding: 0.4rem 1rem;
+        font-size: 0.9rem;
+    }
+
+    .btn-primary {
+        background-color: var(--accent-color);
+        border: none;
+        font-weight: 500;
+    }
+
+    .btn-primary:hover {
+        background-color: #c4954e;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+        .hero {
+            padding: 4rem 1rem;
+        }
+
+        .hero h1 {
+            font-size: 2.2rem;
+        }
+
+        .menu-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Filter menu items by category
+    const categoryButtons = document.querySelectorAll('.category-btn');
+    const menuItems = document.querySelectorAll('.menu-card');
+
+    categoryButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const category = button.getAttribute('data-category');
+            
+            // Update active button
+            categoryButtons.forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            
+            // Filter items
+            menuItems.forEach(item => {
+                if (category === 'all' || item.getAttribute('data-category') === category) {
+                    item.style.display = 'flex';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+
+    // Add to cart functionality
+    const addToOrderButtons = document.querySelectorAll('.add-to-order');
+    addToOrderButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const itemId = this.getAttribute('data-item-id');
+            // In a real app, you would add this to a shopping cart
+            // For now, we'll just show a success message
+            alert('Item added to your order!');
+            
+            // Animate the button
+            this.innerHTML = '<i class="fas fa-check"></i> Added';
+            this.style.backgroundColor = '#28a745';
+            
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-plus"></i> Add to Order';
+                this.style.backgroundColor = '';
+            }, 2000);
+        });
+    });
+});
+</script>
 {% endblock %}
