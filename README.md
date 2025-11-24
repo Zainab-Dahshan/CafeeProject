@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Maryam's Café Website
 
 A simple website for a small café built with Python Flask, SQLite, HTML, CSS, and JavaScript.
@@ -53,7 +52,7 @@ cafeeproject/
     ```
 
 3. Install required Python packages:
-=======
+
 # Café Management System
 
 A comprehensive café management system built with Flask, featuring menu management, order processing, user authentication, and administrative controls.
@@ -65,23 +64,17 @@ A comprehensive café management system built with Flask, featuring menu managem
 
 ## 📋 Table of Contents
 
-- [✨ Features](#-features)
+- [✨ Features](#features)
 
-- [🛠 Tech Stack](#-tech-stack)
+- [🛠 Tech Stack](#tech-stack)
 
-- [📦 Installation](#-installation)
+- [📦 Installation](#installation)
 
-- [⚙️ Configuration](#️-configuration)
+- [⚙️ Configuration](#configuration)
 
 - [Running the Application](#running-the-application)
 
-- [API Documentation](#api-documentation)
-
-- [Project Structure](#project-maintenance)
-
-- [Testing](#testing)
-
-- [Deployment](#deployment)
+- [Project Maintenance](#project-maintenance)
 
 - [License](#license)
 
@@ -176,10 +169,6 @@ A comprehensive café management system built with Flask, featuring menu managem
 
    ```bash
    cp .env.example .env
-   ```
->>>>>>> origin/blackboxai/cafe-website
-
-    ```bash
     pip install Flask
     ```
 
