@@ -1,18 +1,20 @@
-# Import db from base first to avoid circular imports
-from .base import db
+# Import db and BaseModel from base first to avoid circular imports
+from .base import db, BaseModel
 
 # Import models
-# Note: These imports are done in app/__init__.py after the app is created
-# to avoid circular imports
+# Note: These imports are done here to ensure they are registered with SQLAlchemy
+from .user import User
+from .menu_item import MenuItem
+from .order import Order, OrderItem
 
-def init_app(app):
-    """Initialize models with the Flask app."""
-    # Import models here to avoid circular imports
-    from .user import User
-    from .menu_item import MenuItem
-    from .order import Order, OrderItem
+def init_app():
+    """Initialize models with the Flask app.
     
-    # Make models available for import from app.models
+    Returns:
+        dict: A dictionary of model classes for easy access.
+    """
+    # This function is kept for backward compatibility
+    # All models are already imported above
     return {
         'User': User,
         'MenuItem': MenuItem,

@@ -1,0 +1,10 @@
+Dear {{ user.username }},
+
+Welcome to Café! Please confirm your email address by clicking on the following link:
+
+{{ url_for('auth.confirm_email', token=token, _external=True) }}
+
+If you did not create an account, please ignore this email.
+
+Sincerely,
+The Café Team

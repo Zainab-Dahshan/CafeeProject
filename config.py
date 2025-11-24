@@ -36,7 +36,9 @@ class Config:
     MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
     MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
-    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@cafe.com')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@cafewebsite.com')
     
@@ -62,28 +64,17 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     DEBUG = False
-    
-    # Security
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SAMESITE = 'Lax'
-    
-    # Rate limiting
     RATELIMIT_DEFAULT = '200 per day;50 per hour'
-    
-    # Logging
     LOG_LEVEL = 'WARNING'
     LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    
-    # Caching
-    CACHE_TYPE = 'RedisCache'  # Requires Redis server
-    CACHE_REDIS_URL = os.environ.get('REDIS_URL', 'redis://localhost:6379/0')
-    
-    # File uploads
+    CACHE_TYPE = 'FileSystemCache'
+    CACHE_DIR = os.path.join(basedir, 'instance', 'cache')
+    CACHE_DEFAULT_TIMEOUT = 300  # 5 minutes
     UPLOAD_FOLDER = os.path.join(basedir, 'app', 'static', 'uploads')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max upload size
-    
-    # API settings
     API_PREFIX = '/api/v1'
 
 class DockerConfig(ProductionConfig):
