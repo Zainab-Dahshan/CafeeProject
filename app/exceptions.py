@@ -1,49 +1,35 @@
 class ValidationError(ValueError):
-    ""
-    Custom exception class for validation errors.
-    """
+    """Custom exception class for validation errors."""
     pass
 
 
 class DatabaseError(Exception):
-    ""
-    Custom exception class for database-related errors.
-    """
+    """Custom exception class for database-related errors."""
     pass
 
 
 class AuthenticationError(Exception):
-    ""
-    Custom exception class for authentication errors.
-    """
+    """Custom exception class for authentication errors."""
     pass
 
 
 class AuthorizationError(Exception):
-    ""
-    Custom exception class for authorization errors.
-    """
+    """Custom exception class for authorization errors."""
     pass
 
 
 class ResourceNotFoundError(Exception):
-    ""
-    Custom exception class for resource not found errors.
-    """
+    """Custom exception class for resource not found errors."""
     pass
 
 
 class BusinessRuleError(Exception):
-    ""
-    Custom exception class for business rule violations.
-    """
+    """Custom exception class for business rule violations."""
     pass
 
 
 class ExternalServiceError(Exception):
-    ""
-    Custom exception class for errors from external services.
-    """
+    """Custom exception class for external service errors."""
     def __init__(self, message, status_code=None, payload=None):
         super().__init__()
         self.message = message
