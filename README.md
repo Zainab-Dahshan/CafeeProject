@@ -1,58 +1,3 @@
-# Maryam's Café Website
-
-A simple website for a small café built with Python Flask, SQLite, HTML, CSS, and JavaScript.
-
-## Features
-
-- Home page displaying the café menu
-- Order page for customers to select items and submit orders
-- Admin panel to view new orders
-- Responsive and clean design
-
-## Project Structure
-
-```text
-cafeeproject/
-├── app.py
-├── database.db
-├── templates/
-│   ├── base.html
-│   ├── home.html
-│   ├── order.html
-│   └── admin.html
-├── static/
-│   ├── css/
-│   │   └── styles.css
-│   └── js/
-│       └── scripts.js
-└── README.md
-```
-
-## Setup Instructions
-
-### Prerequisites
-
-- Python 3.x installed on your machine
-- pip (Python package installer)
-
-### Installation
-
-1. Clone or download the project files.
-
-2. Create and activate a virtual environment (recommended):
-
-    ```bash
-    python -m venv venv
-
-    # On Windows
-    venv\Scripts\activate
-
-    # On macOS/Linux
-    source venv/bin/activate
-    ```
-
-3. Install required Python packages:
-
 # Café Management System
 
 A comprehensive café management system built with Flask, featuring menu management, order processing, user authentication, and administrative controls.
@@ -64,17 +9,23 @@ A comprehensive café management system built with Flask, featuring menu managem
 
 ## 📋 Table of Contents
 
-- [✨ Features](#features)
+- [✨ Features](#-features)
 
-- [🛠 Tech Stack](#tech-stack)
+- [🛠 Tech Stack](#-tech-stack)
 
-- [📦 Installation](#installation)
+- [📦 Installation](#-installation)
 
-- [⚙️ Configuration](#configuration)
+- [⚙️ Configuration](#️-configuration)
 
 - [Running the Application](#running-the-application)
 
-- [Project Maintenance](#project-maintenance)
+- [API Documentation](#api-documentation)
+
+- [Project Structure](#project-maintenance)
+
+- [Testing](#testing)
+
+- [Deployment](#deployment)
 
 - [License](#license)
 
@@ -169,6 +120,9 @@ A comprehensive café management system built with Flask, featuring menu managem
 
    ```bash
    cp .env.example .env
+   ```
+
+    ```bash
     pip install Flask
     ```
 

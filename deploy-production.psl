@@ -1,0 +1,335 @@
+<# 
+.SYNOPSIS
+    Automated deployment script for Café Application
+.DESCRIPTION
+    This script automates the deployment of the Café Application to a production server.
+    It handles server setup, database configuration, application deployment, and monitoring setup.
+.PARAMETER ServerIP
+    The IP address or hostname of your production server
+.PARAMETER Domain
+    Your domain name (e.g., cafe.example.com)
+.PARAMETER SshKeyPath
+    Path to your SSH private key (default: ~/.ssh/id_rsa)
+.PARAMETER SkipSsl
+    Skip SSL certificate setup
+.EXAMPLE
+    .\deploy-production.ps1 -ServerIP "123.456.789.10" -Domain "cafe.example.com"
+#>
+
+param(
+    [Parameter(Mandatory=$true)]
+    [string]$ServerIP,
+    
+    [Parameter(Mandatory=$true)]
+    [string]$Domain,
+    
+    [string]$SshKeyPath = "$env:USERPROFILE\.ssh\id_rsa",
+    
+    [switch]$SkipSsl
+)
+
+# Set error action preference
+$ErrorActionPreference = "Stop"
+
+# Check for required commands
+function Test-CommandExists {
+    param($command)
+    return $null -ne (Get-Command $command -ErrorAction SilentlyContinue)
+}
+
+# Check for required tools
+$requiredTools = @("ssh", "scp", "rsync")
+foreach ($tool in $requiredTools) {
+    if (-not (Test-CommandExists $tool)) {
+        Write-Error "Required tool '$tool' is not installed or not in PATH"
+        exit 1
+    }
+}
+
+# Check SSH key
+if (-not (Test-Path $SshKeyPath)) {
+    Write-Error "SSH key not found at $SshKeyPath"
+    exit 1
+}
+
+# Define colors for output
+$colors = @{
+    "success" = "Green"
+    "info" = "Cyan"
+    "warning" = "Yellow"
+    "error" = "Red"
+}
+
+# Function to log messages
+function Write-Log {
+    param(
+        [string]$Message,
+        [string]$Level = "info"
+    )
+    
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $color = $colors[$Level]
+    if (-not $color) { $color = "White" }
+    
+    Write-Host "[$timestamp] $Message" -ForegroundColor $color
+}
+
+# Function to execute remote command
+function Invoke-RemoteCommand {
+    param(
+        [string]$Command,
+        [switch]$Sudo = $false
+    )
+    
+    $sshCommand = "ssh -i `"$SshKeyPath`" -o StrictHostKeyChecking=no root@$ServerIP"
+    if ($Sudo) {
+        $sshCommand += " 'sudo $Command'"
+    } else {
+        $sshCommand += " '$Command'"
+    }
+    
+    Write-Log "Executing: $Command" "info"
+    $output = Invoke-Expression $sshCommand 2>&1
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Log "Command failed with exit code $LASTEXITCODE: $output" "error"
+        throw "Remote command failed"
+    }
+    
+    return $output
+}
+
+# Function to copy files to remote server
+function Copy-ToRemote {
+    param(
+        [string]$LocalPath,
+        [string]$RemotePath
+    )
+    
+    Write-Log "Copying $LocalPath to $ServerIP:$RemotePath" "info"
+    $scpCommand = "scp -i `"$SshKeyPath`" -r `"$LocalPath`" root@${ServerIP}:`"$RemotePath`""
+    $output = Invoke-Expression $scpCommand 2>&1
+    
+    if ($LASTEXITCODE -ne 0) {
+        Write-Log "Failed to copy files: $output" "error"
+        throw "File copy failed"
+    }
+}
+
+# Start deployment
+Write-Log "Starting deployment of Café Application to $ServerIP ($Domain)" "info"
+
+try {
+    # 1. Update server packages
+    Write-Log "Updating server packages..." "info"
+    Invoke-RemoteCommand "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get upgrade -y" -Sudo
+    
+    # 2. Install required packages
+    Write-Log "Installing required packages..." "info"
+    Invoke-RemoteCommand "DEBIAN_FRONTEND=noninteractive apt-get install -y python3-pip python3-venv nginx supervisor postgresql postgresql-contrib redis-server" -Sudo
+    
+    # 3. Set up PostgreSQL
+    Write-Log "Configuring PostgreSQL..." "info"
+    $dbPassword = [System.Web.Security.Membership]::GeneratePassword(24, 4)
+    $dbUser = "cafeuser"
+    $dbName = "cafedb"
+    
+    $psqlCommands = @"
+CREATE DATABASE $dbName;
+CREATE USER $dbUser WITH PASSWORD '$dbPassword';
+ALTER ROLE $dbUser SET client_encoding TO 'utf8';
+ALTER ROLE $dbUser SET default_transaction_isolation TO 'read committed';
+ALTER ROLE $dbUser SET timezone TO 'UTC';
+GRANT ALL PRIVILEGES ON DATABASE $dbName TO $dbUser;
+\q
+"@
+    
+    $psqlCommands | Out-File -FilePath "postgres_setup.sql" -Encoding ASCII
+    Copy-ToRemote "postgres_setup.sql" "/tmp/"
+    Invoke-RemoteCommand "sudo -u postgres psql -f /tmp/postgres_setup.sql" -Sudo
+    Remove-Item "postgres_setup.sql" -Force
+    
+    # 4. Create application directory
+    $appDir = "/var/www/cafe_app"
+    Invoke-RemoteCommand "mkdir -p $appDir" -Sudo
+    Invoke-RemoteCommand "chown -R `$USER:`$USER $appDir" -Sudo
+    
+    # 5. Copy application files (excluding unnecessary files)
+    Write-Log "Copying application files..." "info"
+    $exclude = @(
+        'venv',
+        '__pycache__',
+        '.git',
+        '.gitignore',
+        '*.pyc',
+        '*.pyo',
+        '*.pyd',
+        '.env',
+        '*.log',
+        '*.db',
+        'instance'
+    )
+    
+    $excludeParams = $exclude | ForEach-Object { "--exclude=`"$_`"" }
+    $rsyncCommand = "rsync -avz --progress $($excludeParams -join ' ') ./ root@${ServerIP}:${appDir}/"
+    Write-Log "Running: $rsyncCommand" "info"
+    Invoke-Expression $rsyncCommand
+    
+    # 6. Set up Python virtual environment
+    Write-Log "Setting up Python virtual environment..." "info"
+    Invoke-RemoteCommand "cd $appDir && python3 -m venv venv && source venv/bin/activate && pip install --upgrade pip && pip install -r requirements.txt"
+    
+    # 7. Create .env file
+    $secretKey = [Convert]::ToBase64String([Security.Cryptography.RandomNumberGenerator]::Create().GetBytes(32))
+    
+    $envContent = @"
+# Flask Configuration
+FLASK_APP=wsgi.py
+FLASK_ENV=production
+SECRET_KEY=$secretKey
+
+# Database Configuration
+DATABASE_URL=postgresql://${dbUser}:${dbPassword}@localhost/${dbName}
+
+# Email Configuration (update these)
+MAIL_SERVER=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USE_TLS=True
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-specific-password
+MAIL_DEFAULT_SENDER=your-email@gmail.com
+
+# Admin User
+ADMIN_EMAIL=admin@${Domain}
+ADMIN_PASSWORD=$(Get-Random -Minimum 100000 -Maximum 999999)
+
+# Application Settings
+PER_PAGE=10
+"@
+    
+    $envContent | Out-File -FilePath ".env" -Encoding ASCII
+    Copy-ToRemote ".env" "$appDir/.env"
+    Remove-Item ".env" -Force
+    
+    # 8. Set up Gunicorn service
+    $gunicornService = @"
+[Unit]
+Description=Gunicorn instance to serve Café Application
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=$appDir
+Environment="PATH=$appDir/venv/bin"
+ExecStart=$appDir/venv/bin/gunicorn --config $appDir/gunicorn_config.py wsgi:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+"@
+    
+    $gunicornService | Out-File -FilePath "cafe-app.service" -Encoding ASCII
+    Copy-ToRemote "cafe-app.service" "/tmp/"
+    Invoke-RemoteCommand "sudo mv /tmp/cafe-app.service /etc/systemd/system/ && sudo systemctl daemon-reload" -Sudo
+    Remove-Item "cafe-app.service" -Force
+    
+    # 9. Set up Nginx
+    $nginxConfig = @"
+server {
+    listen 80;
+    server_name $Domain;
+
+    location / {
+        proxy_pass http://unix:$appDir/cafe_app.sock;
+        proxy_set_header Host `$host;
+        proxy_set_header X-Real-IP `$remote_addr;
+        proxy_set_header X-Forwarded-For `$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto `$scheme;
+    }
+
+    location /static {
+        alias $appDir/app/static;
+        expires 30d;
+    }
+
+    location /media {
+        alias $appDir/app/media;
+        expires 30d;
+    }
+
+    client_max_body_size 10M;
+}
+"@
+    
+    $nginxConfig | Out-File -FilePath "cafe_app_nginx" -Encoding ASCII
+    Copy-ToRemote "cafe_app_nginx" "/tmp/"
+    Invoke-RemoteCommand "sudo mv /tmp/cafe_app_nginx /etc/nginx/sites-available/$Domain && sudo ln -sf /etc/nginx/sites-available/$Domain /etc/nginx/sites-enabled/ && sudo rm -f /etc/nginx/sites-enabled/default" -Sudo
+    Remove-Item "cafe_app_nginx" -Force
+    
+    # 10. Set up SSL with Let's Encrypt
+    if (-not $SkipSsl) {
+        Write-Log "Setting up SSL with Let's Encrypt..." "info"
+        Invoke-RemoteCommand "DEBIAN_FRONTEND=noninteractive apt-get install -y certbot python3-certbot-nginx" -Sudo
+        Invoke-RemoteCommand "certbot --nginx -d $Domain --non-interactive --agree-tos --email admin@$Domain --redirect" -Sudo
+    }
+    
+    # 11. Set up backup script
+    $backupScript = @"
+#!/bin/bash
+DATE=`date +%Y%m%d_%H%M%S`
+BACKUP_DIR="/var/backups/cafe_app"
+mkdir -p `$BACKUP_DIR
+
+# Backup database
+PGPASSWORD=$dbPassword pg_dump -U $dbUser -h localhost $dbName > `$BACKUP_DIR/cafedb_`$DATE.sql
+
+# Backup media and important files
+tar -czf `$BACKUP_DIR/app_`$DATE.tar.gz $appDir/app/static $appDir/app/media
+
+# Keep last 30 days of backups
+find `$BACKUP_DIR -type f -mtime +30 -delete
+"@
+    
+    $backupScript | Out-File -FilePath "backup_cafe.sh" -Encoding ASCII
+    Copy-ToRemote "backup_cafe.sh" "/tmp/"
+    Invoke-RemoteCommand "sudo mv /tmp/backup_cafe.sh /usr/local/bin/backup_cafe.sh && sudo chmod +x /usr/local/bin/backup_cafe.sh" -Sudo
+    Invoke-RemoteCommand "sudo mkdir -p /var/backups/cafe_app && sudo chown -R `$USER:`$USER /var/backups/cafe_app" -Sudo
+    
+    # 12. Set up cron job for backups
+    Invoke-RemoteCommand "(crontab -l 2>/dev/null; echo '0 2 * * * /usr/local/bin/backup_cafe.sh') | crontab -" -Sudo
+    
+    # 13. Set proper permissions
+    Invoke-RemoteCommand "sudo chown -R www-data:www-data $appDir && sudo chmod -R 755 $appDir" -Sudo
+    
+    # 14. Start services
+    Write-Log "Starting services..." "info"
+    Invoke-RemoteCommand "sudo systemctl enable cafe-app && sudo systemctl start cafe-app" -Sudo
+    Invoke-RemoteCommand "sudo systemctl restart nginx" -Sudo
+    
+    # 15. Set up firewall
+    Write-Log "Configuring firewall..." "info"
+    Invoke-RemoteCommand "sudo ufw allow 'Nginx Full' && sudo ufw allow 'OpenSSH' && echo 'y' | sudo ufw enable" -Sudo
+    
+    # 16. Show deployment summary
+    $adminPassword = ($envContent -split "`n" | Where-Object { $_ -match "ADMIN_PASSWORD=" } -First 1) -split "=" | Select-Object -Last 1
+    
+    Write-Log "`n=== Deployment Summary ===" "success"
+    Write-Log "Application URL: http://$Domain" "success"
+    Write-Log "Admin email: admin@$Domain" "success"
+    Write-Log "Admin password: $adminPassword" "warning"
+    Write-Log "Database: $dbName" "info"
+    Write-Log "Database user: $dbUser" "info"
+    Write-Log "Database password: $dbPassword" "warning"
+    Write-Log "`nNext steps:" "info"
+    Write-Log "1. Update the .env file with your email settings" "info"
+    Write-Log "2. Access the admin panel at: http://$Domain/admin" "info"
+    Write-Log "3. Change the admin password after first login" "warning"
+    
+} catch {
+    Write-Log "Deployment failed: $_" "error"
+    Write-Log "Check the logs above for more details." "error"
+    exit 1
+}
+
+Write-Log "Deployment completed successfully!" "success"
