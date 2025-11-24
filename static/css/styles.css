@@ -20,11 +20,6 @@ body {
     padding: 20px;
 }
 
-/* Form Styles */
-.hidden {
-    display: none;
-}
-
 /* Header */
 header {
     background-color: #7f4a1e;
@@ -134,8 +129,4 @@ input[type="checkbox"] {
 .order-card h3 {
     color: #7f4a1e;
     margin-bottom: 10px;
-}
-
-.hidden {
-    display: none;
 }

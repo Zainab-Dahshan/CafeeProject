@@ -11,7 +11,7 @@ Flask-Caching==2.1.0
 # Database
 SQLAlchemy==2.0.23
 alembic==1.13.0
-psycopg2-binary==2.9.9  # For PostgreSQL support
+psycopg2-binary>=2.9.0  # For PostgreSQL support
 
 # Production
 python-dotenv==1.0.0
