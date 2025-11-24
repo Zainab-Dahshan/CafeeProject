@@ -1,57 +1,126 @@
-# Maryam's Café Website
+# Café Management System
 
-A simple website for a small café built with Python Flask, SQLite, HTML, CSS, and JavaScript.
+A comprehensive café management system built with Flask, featuring menu management, order processing, user authentication, and administrative controls.
 
-## Features
+![Café Management System](https://img.shields.io/badge/status-active-success)
+![Python](https://img.shields.io/badge/Python-3.9%2B-blue)
+![Flask](https://img.shields.io/badge/Flask-2.0%2B-lightgrey)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-- Home page displaying the café menu
-- Order page for customers to select items and submit orders
-- Admin panel to view new orders
-- Responsive and clean design
+## 📋 Table of Contents
 
-## Project Structure
+- [✨ Features](#-features)
 
-```text
-cafeeproject/
-├── app.py
-├── database.db
-├── templates/
-│   ├── base.html
-│   ├── home.html
-│   ├── order.html
-│   └── admin.html
-├── static/
-│   ├── css/
-│   │   └── styles.css
-│   └── js/
-│       └── scripts.js
-└── README.md
-```
+- [🛠 Tech Stack](#-tech-stack)
 
-## Setup Instructions
+- [📦 Installation](#-installation)
 
-### Prerequisites
+- [⚙️ Configuration](#️-configuration)
 
-- Python 3.x installed on your machine
-- pip (Python package installer)
+- [Running the Application](#running-the-application)
 
-### Installation
+- [API Documentation](#api-documentation)
 
-1. Clone or download the project files.
+- [Project Structure](#project-maintenance)
 
-2. Create and activate a virtual environment (recommended):
+- [Testing](#testing)
 
-    ```bash
-    python -m venv venv
+- [Deployment](#deployment)
 
-    # On Windows
-    venv\Scripts\activate
+- [License](#license)
 
-    # On macOS/Linux
-    source venv/bin/activate
-    ```
+## ✨ Features
 
-3. Install required Python packages:
+### For Customers
+
+- Browse menu with categories and dietary filters
+- User authentication and profile management
+- Order placement and tracking
+- Order history
+- Responsive design for all devices
+
+### For Staff
+
+- Dashboard with order notifications
+- Order management
+- Table management
+- Basic reporting
+
+### For Administrators
+
+- Full menu management
+- User management
+- Advanced reporting and analytics
+- System configuration
+- Database administration
+
+## 🛠 Tech Stack
+
+### Backend
+
+- **Python 3.9+**
+- **Flask 2.0+** - Web framework
+- **SQLAlchemy** - ORM
+- **Alembic** - Database migrations
+- **Flask-Login** - User session management
+- **Flask-WTF** - Form handling
+- **Flask-Mail** - Email notifications
+
+### Frontend
+
+- **HTML5/CSS3**
+- **Bootstrap 5** - Responsive design
+- **JavaScript** - Client-side interactivity
+- **jQuery** - DOM manipulation
+- **Font Awesome** - Icons
+
+### Database
+
+- **SQLite** (Development)
+- **PostgreSQL** (Production)
+
+### Development Tools
+
+- **Git** - Version control
+- **Pip** - Package management
+- **Pytest** - Testing framework
+- **Black** - Code formatting
+- **Flake8** - Linting
+
+## 📦 Installation
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/yourusername/cafe-management-system.git
+   cd cafe-management-system
+   ```
+
+2. **Create and activate a virtual environment**
+
+   ```bash
+   # On Windows
+   python -m venv venv
+   .\venv\Scripts\activate
+   
+   # On macOS/Linux
+   python3 -m venv venv
+   source venv/bin/activate
+   ```
+
+3. **Install dependencies**
+
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+## ⚙️ Configuration
+
+1. Copy the example environment file and update it with your settings:
+
+   ```bash
+   cp .env.example .env
+   ```
 
     ```bash
     pip install Flask
