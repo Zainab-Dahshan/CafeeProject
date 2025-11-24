@@ -128,7 +128,8 @@
                         </div>
                         <div class="order-items">
                             <h4>Order Items</h4>
-                            <ul>{% for item in order.items %}<li>
+                            <ul>
+                                {% for item in order.items %}<li>
                                     <span class="item-quantity">{{ item.quantity }}x</span>
                                     <span class="item-name">{{ item.name }}</span>
                                     <span class="item-price">${{ "%.2f"|format(item.price * item.quantity) }}</span>

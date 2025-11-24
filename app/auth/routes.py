@@ -5,7 +5,7 @@ from .. import db
 from ..models.user import User
 from . import auth
 from .forms import LoginForm, RegistrationForm, ResetPasswordRequestForm, ResetPasswordForm, UpdateProfileForm
-from ..utils.email import send_password_reset_email
+from ..utils.email import send_password_reset_email, send_email_confirmation
 
 @auth.before_app_request
 def before_request():
@@ -70,8 +70,9 @@ def register():
         db.session.add(user)
         db.session.commit()
         
-        # Send welcome email (implement this function in utils/email.py)
-        # send_welcome_email(user)
+        # Send email confirmation
+        send_email_confirmation(user, current_app.mail)
+        flash('A confirmation email has been sent to your email address.', 'info')
         
         flash('Congratulations, you are now a registered user!', 'success')
         return redirect(url_for('auth.login'))
@@ -88,7 +89,7 @@ def reset_password_request():
     if form.validate_on_submit():
         user = User.query.filter_by(email=form.email.data.lower()).first()
         if user:
-            send_password_reset_email(user)
+            send_password_reset_email(user, current_app.mail)
         
         flash('Check your email for instructions to reset your password', 'info')
         return redirect(url_for('auth.login'))

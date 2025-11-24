@@ -182,28 +182,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [Font Awesome](https://fontawesome.com/) - For the beautiful icons
 - All contributors who have helped shape this project
 
-### Backend
-
-- **Python 3.9+**
-- **Flask 2.0+** - Web framework
-- **SQLAlchemy** - ORM
-- **Alembic** - Database migrations
-- **Flask-Login** - User session management
-- **Flask-WTF** - Form handling
-- **Flask-Mail** - Email notifications
-
-### Frontend
-
-- **HTML5/CSS3**
-- **Bootstrap 5** - Responsive design
-- **JavaScript** - Client-side interactivity
-- **jQuery** - DOM manipulation
-- **Font Awesome** - Icons
-
-### Database
-
-- **SQLite** (Development)
-- **PostgreSQL** (Production)
 
 
 ## 📦 Installation

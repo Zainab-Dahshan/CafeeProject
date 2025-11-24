@@ -12,10 +12,11 @@ class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-key-change-in-production'
     DEBUG = os.environ.get('FLASK_ENV') == 'development'
     
-    # Database settings
+    # Database settings - Using SQLite for development
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
         'sqlite:///' + os.path.join(basedir, 'app.db')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ECHO = DEBUG  # Log SQL queries in debug mode
     
     # Session settings
     PERMANENT_SESSION_LIFETIME = timedelta(days=1)
@@ -25,7 +26,9 @@ class Config:
     
     # Security settings
     WTF_CSRF_ENABLED = True
-    WTF_CSRF_SECRET_KEY = os.environ.get('CSRF_SECRET_KEY') or 'csrf-secret-key-change-in-production'
+    WTF_CSRF_SECRET_KEY = os.environ.get('CSRF_SECRET_KEY') or os.urandom(24).hex()
+    SECURITY_PASSWORD_SALT = os.environ.get('SECURITY_PASSWORD_SALT') or 'dev-password-salt-change-in-production'
+    RATELIMIT_DEFAULT = '200 per day;50 per hour'
     
     # Upload settings
     UPLOAD_FOLDER = os.path.join(basedir, 'app', 'static', 'uploads')
@@ -38,9 +41,8 @@ class Config:
     MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME', '')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD', '')
-    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@cafe.com')
-    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@cafewebsite.com')
+    MAIL_DEBUG = DEBUG
     
     # Application settings
     CAFE_MAIL_SUBJECT_PREFIX = '[Café] '
